@@ -27,14 +27,14 @@ exports.handler = async (event, context) => {
         const SYSTEM_PROMPT = `Ты — Волшебная Скатерть-Самобранка. Ты должна генерировать ГЛУБОКИЕ и ПОДРОБНЫЕ идеи.
         
         ПРАВИЛА МАГИИ (СТРОГО):
-        1. ОБЪЕМ ОТВЕТА: Поле "a" (план) должно быть развернутым. Минимум 3-4 предложения, максимум 9 строк текста. Никаких ответов в одну строчку!
+        1. ОБЪЕМ ОТВЕТА: Поле "a" (реализация) должно быть развернутым. Минимум 3-4 предложения, максимум 9 строк текста.
         2. СОДЕРЖАНИЕ: Пиши конкретные шаги, детали, секреты реализации. Текст должен быть плотным и полезным.
-        3. СТИЛЬ: Используй HTML-теги <strong> для выделения ключевых этапов. Пиши живым, вдохновляющим языком.
-        4. КОНТЕКСТ: Идея должна четко соответствовать роли "${subject}", ситуации "${grade}" и уровню сложности "${difficulty}".
-        5. ФОРМАТ КАРТОЧКИ:
-           - "q" (название): Яркое и четкое (до 15 слов).
-           - "a" (реализация): Развернутый план (от 40 до 80 слов).
-        6. ФОРМАТ ОТВЕТА: Только чистый JSON-массив: [{"q": "...", "a": "..."}]`;
+        3. СТИЛЬ: Используй HTML-теги <strong> для выделения ключевых этапов.
+        4. КОНТЕКСТ: Идея должна соответствовать роли "${subject}" и ситуации "${grade}".
+        5. ФОРМАТ JSON: Твой ответ должен быть СТРОГО валидным JSON-массивом объектов. 
+           - КРИТИЧНО: Используй только двойные кавычки для строк. 
+           - КРИТИЧНО: Если внутри текста нужны кавычки, используй только ёлочки « » или экранируй их.
+        6. ФОРМАТ ОТВЕТА: [{"q": "название", "a": "подробный план"}]`;
 
         let userPrompt = `Тема: "${topic}". Сгенерируй ${count} уникальных идей.`;
         if (textData && textData.trim() !== "") {
@@ -54,32 +54,38 @@ exports.handler = async (event, context) => {
                     { role: 'system', content: SYSTEM_PROMPT },
                     { role: 'user', content: userPrompt }
                 ],
-                temperature: 0.8
+                temperature: 0.7,
+                response_format: { type: "json_object" }
             })
         });
 
         const data = await response.json();
-        console.log('Groq response received:', JSON.stringify(data).substring(0, 200));
-
-        if (data.error) {
-            throw new Error(`Groq API Error: ${data.error.message || JSON.stringify(data.error)}`);
-        }
-
-        const rawContent = data.choices[0].message.content;
+        let rawContent = data.choices[0].message.content;
         
-        const startBracket = rawContent.indexOf('[');
-        const endBracket = rawContent.lastIndexOf(']');
-        
-        if (startBracket === -1 || endBracket === -1) {
-            throw new Error('Failed to parse JSON from AI response');
-        }
+        // Очистка от возможных markdown-оберток
+        rawContent = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
 
-        const jsonStr = rawContent.substring(startBracket, endBracket + 1);
+        // Попытка распарсить JSON
+        let cards;
+        try {
+            const parsed = JSON.parse(rawContent);
+            // Если ИИ вернул объект с ключом (например, {"cards": [...]}), берем массив
+            cards = Array.isArray(parsed) ? parsed : (parsed.cards || parsed.ideas || Object.values(parsed)[0]);
+        } catch (e) {
+            console.error('Initial parse failed, attempting cleanup');
+            // Если совсем плохо, пробуем найти массив через регулярку
+            const match = rawContent.match(/\[\s*\{[\s\S]*\}\s*\]/);
+            if (match) {
+                cards = JSON.parse(match[0]);
+            } else {
+                throw new Error('Could not find valid JSON array in AI response');
+            }
+        }
         
         return {
             statusCode: 200,
             headers,
-            body: jsonStr
+            body: JSON.stringify(cards)
         };
 
     } catch (error) {
