@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ГигаСамобранка — Современный генератор учебных карточек</title>
+  <!-- Google Fonts for premium modern typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Ysabeau+Office:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- KaTeX for beautiful math formula rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <img src="mascot.png" alt="Маскот Самобранка" class="header-mascot">
+        <div class="logo-text">
+          <span class="logo-title">ГигаСамобранка</span>
+          <span class="logo-tagline">Умный школьный помощник</span>
+        </div>
+      </div>
+
+      <!-- Sliding Pill Nav Switcher -->
+      <nav class="nav-tabs" id="navTabs">
+        <button class="nav-tab active" data-target="about-section">
+          <span class="tab-icon">🎒</span>
+          <span class="tab-text">О продукте</span>
+        </button>
+        <button class="nav-tab" data-target="builder-section">
+          <span class="tab-icon">✨</span>
+          <span class="tab-text">Создать карточки</span>
+        </button>
+        <button class="nav-tab" data-target="library-section">
+          <span class="tab-icon">📚</span>
+          <span class="tab-text">Моя библиотека</span>
+          <span class="library-badge" id="libraryCount">5</span>
+        </button>
+      </nav>
+
+      <div class="auth-area">
+        <button class="btn btn-secondary btn-login" id="openAuthBtn">
+          <span>Войти</span>
+          <span class="login-icon">👤</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="appToast">Карточки успешно сгенерированы!</div>
+
+  <!-- Main Content Areas -->
+  <main class="main-content">
+
+    <!-- ================= SECTION 1: ABOUT PRODUCT ================= -->
+    <section class="tab-content active" id="about-section">
+      <div class="section-container">
+        
+        <!-- Hero Section with Mascot welcome -->
+        <div class="hero-card">
+          <div class="hero-mascot-container">
+            <img src="mascot.png" alt="Самобранка приветствует" class="hero-mascot">
+            <div class="mascot-bubble">
+              <p class="bubble-text">Привет! Я <strong>Скатерть-Самобранка</strong>. 🌾✨ Поделись со мной текстом или файлом, и я мигом «накрою стол» из интерактивных флеш-карточек для твоего лучшего урока!</p>
+              <div class="bubble-pointer"></div>
+            </div>
+          </div>
+          <div class="hero-content">
+            <h1 class="hero-title">Открыл учебник — <br><span class="accent-text">карточки накрыли стол сами</span></h1>
+            <p class="hero-description">Современный сервис для учителей и учеников. Больше никакой рутины — искусственный интеллект проанализирует учебные материалы и создаст готовые игровые карточки за секунды.</p>
+            <button class="btn btn-primary btn-large" onclick="switchTab('builder-section')">
+              <span>Попробовать сейчас</span>
+              <span class="btn-arrow">→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bento Grid for features and interaction -->
+        <div class="bento-grid">
+          
+          <!-- Bento Item 1: Magic Flip Card (Interactive) -->
+          <div class="bento-item bento-card-interactive">
+            <h3 class="bento-title">Попробуй в действии ⚡</h3>
+            <p class="bento-desc">Нажми на карточку ниже, чтобы перевернуть её и узнать правильный ответ.</p>
+            <div class="playground-card-container">
+              <div class="flip-card" id="playgroundCard">
+                <div class="flip-card-inner">
+                  <!-- Front Side -->
+                  <div class="flip-card-front">
+                    <span class="card-category">🌳 Окружающий мир</span>
+                    <p class="card-question">Какое дерево называют королем русского леса из-за его могучего вида и долголетия?</p>
+                    <span class="card-hint">Кликни для ответа 🔄</span>
+                  </div>
+                  <!-- Back Side -->
+                  <div class="flip-card-back">
+                    <span class="card-category-back">Ответ найден! ✨</span>
+                    <p class="card-answer">Это <strong>Дуб</strong>. Он может жить до 1000 лет и имеет мощную корневую систему.</p>
+                    <span class="card-back-hint">Нажми еще раз 🔄</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bento Item 2: AI Fast Generation -->
+          <div class="bento-item bento-ai-speed">
+            <div class="bento-icon-wrapper">🚀</div>
+            <h3 class="bento-title">Мгновенный анализ материалов</h3>
+            <p class="bento-desc">Просто загрузите файл с темой или вставьте параграф учебника. Умная Самобранка выделит самое важное.</p>
+          </div>
+
+          <!-- Bento Item 3: File formats supported -->
+          <div class="bento-item bento-formats">
+            <h3 class="bento-title">Поддержка любых форматов 📄</h3>
+            <div class="format-tags">
+              <span class="tag tag-pdf">PDF</span>
+              <span class="tag tag-docx">DOCX</span>
+              <span class="tag tag-pptx">PPTX</span>
+              <span class="tag tag-txt">TXT</span>
+              <span class="tag tag-md">MD</span>
+            </div>
+            <p class="bento-desc">Загружайте презентации, конспекты уроков, статьи или книги без ограничений.</p>
+          </div>
+
+          <!-- Bento Item 4: LaTeX Formulas -->
+          <div class="bento-item bento-formulas-card">
+            <div class="formula-preview">
+              <div class="formula-block">$$ S = a \cdot b $$</div>
+              <div class="formula-block">$$ E = m \cdot c^2 $$</div>
+            </div>
+            <h3 class="bento-title">Математика без искажений</h3>
+            <p class="bento-desc">Полная поддержка формул LaTeX для физики, химии и математики любой сложности.</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 2: CARD BUILDER ================= -->
+    <section class="tab-content" id="builder-section">
+      <div class="section-container builder-container">
+        
+        <div class="builder-sidebar">
+          <div class="sidebar-mascot-box">
+            <img src="mascot.png" alt="Самобранка думает" class="sidebar-mascot">
+            <div class="sidebar-speech">
+              <p>Выбери параметры урока, а я соберу идеальные карточки для проверки знаний!</p>
+            </div>
+          </div>
+          
+          <div class="demo-box">
+            <h4 class="demo-title">⚡ Демо-наборы в один клик</h4>
+            <p class="demo-subtitle">Сразу сгенерируйте готовые наборы:</p>
+            <div class="demo-buttons">
+              <button class="demo-btn" onclick="loadDemo('winter')">❄️ Словарные слова: Зима</button>
+              <button class="demo-btn" onclick="loadDemo('math')">✖️ Таблица умножения на 7</button>
+              <button class="demo-btn" onclick="loadDemo('forest')">🌳 Окружающий мир: Лес</button>
+              <button class="demo-btn" onclick="loadDemo('kolobok')">🐺 Литература: "Колобок"</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-main">
+          <form class="builder-form" id="generatorForm" onsubmit="generateCards(event)">
+            <h2 class="form-title">🎨 Настройка генерации</h2>
+            <p class="form-subtitle">Заполните поля, чтобы создать уникальный набор флеш-карточек</p>
+            
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="subjectSelect" class="form-label">📚 Школьный предмет</label>
+                <select id="subjectSelect" class="form-control" required>
+                  <option value="" disabled selected>— выберите —</option>
+                  <option value="Русский язык">Русский язык</option>
+                  <option value="Математика">Математика</option>
+                  <option value="Окружающий мир">Окружающий мир</option>
+                  <option value="Литература">Литература</option>
+                  <option value="Английский язык">Английский язык</option>
+                  <option value="История">История</option>
+                  <option value="Биология">Биология</option>
+                  <option value="География">География</option>
+                  <option value="Физика">Физика</option>
+                  <option value="Информатика">Информатика</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="classSelect" class="form-label">🎒 Класс обучения</label>
+                <select id="classSelect" class="form-control" required>
+                  <option value="" disabled selected>— выберите —</option>
+                  <option value="1">1 класс</option>
+                  <option value="2">2 класс</option>
+                  <option value="3">3 класс</option>
+                  <option value="4">4 класс</option>
+                  <option value="5">5 класс</option>
+                  <option value="6">6 класс</option>
+                  <option value="7">7 класс</option>
+                  <option value="8">8 класс</option>
+                  <option value="9">9 класс</option>
+                  <option value="10">10 класс</option>
+                  <option value="11">11 класс</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="topicInput" class="form-label">🔍 Тема урока</label>
+              <input type="text" id="topicInput" class="form-control" placeholder="Например: Словарные слова на тему Зима, или Законы Ньютона" required>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="countInput" class="form-label">🃏 Количество карточек</label>
+                <div class="counter-input">
+                  <button type="button" class="counter-btn" onclick="adjustCounter(-1)">-</button>
+                  <input type="number" id="countInput" value="8" min="3" max="30" readonly class="form-control text-center">
+                  <button type="button" class="counter-btn" onclick="adjustCounter(1)">+</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">⚙️ Сложность материала</label>
+                <div class="difficulty-picker">
+                  <button type="button" class="diff-btn active" data-value="easy">Простые</button>
+                  <button type="button" class="diff-btn" data-value="medium">Средние</button>
+                  <button type="button" class="diff-btn" data-value="hard">Сложные</button>
+                  <input type="hidden" id="difficultyInput" value="easy">
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload File Zone -->
+            <div class="form-group">
+              <label class="form-label">📁 Загрузить учебные файлы (до 10 файлов)</label>
+              <div class="upload-dropzone" id="dropzone" onclick="triggerFileInput()">
+                <div class="upload-icon">📥</div>
+                <p class="upload-text">Перетащите файлы сюда или <span class="highlight">кликните для выбора</span></p>
+                <p class="upload-formats">Поддерживаются TXT, PDF, DOCX, PPTX (до 20 МБ каждый)</p>
+                <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".txt,.pdf,.docx,.pptx,.md" onchange="handleFileSelect(event)">
+              </div>
+              <div class="selected-files-list" id="selectedFilesList"></div>
+            </div>
+
+            <!-- Custom Direct Text input -->
+            <div class="form-group">
+              <label for="textInput" class="form-label">✍️ Или вставьте текст учебника напрямую</label>
+              <textarea id="textInput" rows="5" class="form-control text-area" placeholder="Вставьте сюда параграф, конспект или список слов..."></textarea>
+            </div>
+
+            <!-- Submit Button with magic effects -->
+            <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
+              <span class="btn-sparkle">✨</span>
+              <span class="btn-text">Накрыть стол карточками!</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 3: LIBRARY ================= -->
+    <section class="tab-content" id="library-section">
+      <div class="section-container">
+        
+        <div class="library-header">
+          <div class="library-header-info">
+            <h2 class="library-title">📚 Мои сохранённые наборы</h2>
+            <p class="library-subtitle">Здесь хранятся все ваши сгенерированные и учебные флеш-карточки</p>
+          </div>
+          <button class="btn btn-primary" onclick="switchTab('builder-section')">
+            <span>+ Создать новый</span>
+          </button>
+        </div>
+
+        <!-- Decks Grid -->
+        <div class="decks-grid" id="decksGrid">
+          <!-- Mock Deck 1 -->
+          <div class="deck-card" onclick="openDeck(0)">
+            <div class="deck-emoji">❄️</div>
+            <div class="deck-body">
+              <span class="deck-badge badge-lang">Русский язык</span>
+              <h3 class="deck-title">Словарные слова: Зима</h3>
+              <p class="deck-meta">8 карточек · 1 класс</p>
+            </div>
+            <div class="deck-footer">
+              <span class="deck-action">Изучать →</span>
+            </div>
+          </div>
+
+          <!-- Mock Deck 2 -->
+          <div class="deck-card" onclick="openDeck(1)">
+            <div class="deck-emoji">✖️</div>
+            <div class="deck-body">
+              <span class="deck-badge badge-math">Математика</span>
+              <h3 class="deck-title">Таблица умножения на 7</h3>
+              <p class="deck-meta">10 карточек · 2 класс</p>
+            </div>
+            <div class="deck-footer">
+              <span class="deck-action">Изучать →</span>
+            </div>
+          </div>
+
+          <!-- Mock Deck 3 -->
+          <div class="deck-card" onclick="openDeck(2)">
+            <div class="deck-emoji">🌳</div>
+            <div class="deck-body">
+              <span class="deck-badge badge-world">Окружающий мир</span>
+              <h3 class="deck-title">Окружающий мир: Лес</h3>
+              <p class="deck-meta">6 карточек · 3 класс</p>
+            </div>
+            <div class="deck-footer">
+              <span class="deck-action">Изучать →</span>
+            </div>
+          </div>
+
+          <!-- Mock Deck 4 -->
+          <div class="deck-card" onclick="openDeck(3)">
+            <div class="deck-emoji">🐺</div>
+            <div class="deck-body">
+              <span class="deck-badge badge-lit">Литература</span>
+              <h3 class="deck-title">Литература: "Колобок"</h3>
+              <p class="deck-meta">8 карточек · 1 класс</p>
+            </div>
+            <div class="deck-footer">
+              <span class="deck-action">Изучать →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fullscreen Flashcards Study Mode (Hidden by default) -->
+        <div class="study-overlay" id="studyOverlay">
+          <div class="study-container">
+            <div class="study-header">
+              <button class="btn-close" onclick="closeStudyMode()">✕ Закрыть</button>
+              <h3 class="study-deck-title" id="studyDeckTitle">Словарные слова: Зима</h3>
+              <div class="study-progress-text" id="studyProgressText">Карточка 1 из 8</div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="study-progress-bar-container">
+              <div class="study-progress-bar" id="studyProgressBar" style="width: 12.5%"></div>
+            </div>
+
+            <!-- Active Card Container with Mascot Panel -->
+            <div class="study-card-stage">
+              <!-- Interactive Mascot Panel -->
+              <div class="study-mascot-panel" id="studyMascotPanel">
+                <img src="mascot_thinking.png" alt="Самобранка помогает" class="study-stage-mascot mascot-thinking" id="studyStageMascot">
+                <div class="study-mascot-bubble">
+                  <p id="studyMascotText">Давай подумаем вместе! 🤔</p>
+                  <div class="study-bubble-pointer"></div>
+                </div>
+              </div>
+
+              <!-- Flashcard -->
+              <div class="study-card flip-card" id="studyCard" onclick="flipStudyCard()">
+                <div class="flip-card-inner">
+                  <!-- Front -->
+                  <div class="flip-card-front">
+                    <p class="study-question" id="studyQuestion">Как пишется слово с пропущенной буквой: д..кабрь?</p>
+                    <span class="study-action-hint">Кликни, чтобы перевернуть 🔄</span>
+                  </div>
+                  <!-- Back -->
+                  <div class="flip-card-back">
+                    <p class="study-answer" id="studyAnswer">Правильно: <strong>декабрь</strong>. Это словарное слово, пишется буква "е".</p>
+                    <span class="study-action-hint">Кликни, чтобы вернуть вопрос 🔄</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="study-controls">
+              <button class="btn btn-secondary btn-nav" id="prevCardBtn" onclick="navigateCard(-1)">← Назад</button>
+              <button class="btn btn-secondary btn-check" onclick="flipStudyCard()">🔄 Проверить</button>
+              <button class="btn btn-primary btn-nav" id="nextCardBtn" onclick="navigateCard(1)">Вперед →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= AUTHENTICATION MODAL ================= -->
+  <div class="auth-modal-overlay" id="authModal">
+    <div class="auth-modal-card">
+      <button class="auth-modal-close" id="closeAuthBtn">✕</button>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" data-form="login-form">Вход</button>
+        <button class="auth-tab-btn" data-form="register-form">Регистрация</button>
+      </div>
+
+      <!-- Login Form -->
+      <form class="auth-form active" id="login-form" onsubmit="handleAuthSubmit(event, 'Вход выполнен!')">
+        <h3 class="auth-title">С возвращением! 👋</h3>
+        <p class="auth-subtitle">Войдите в систему для доступа к вашим наборам карточек</p>
+        
+        <div class="form-group">
+          <label for="loginEmail" class="form-label">Электронная почта</label>
+          <input type="email" id="loginEmail" class="form-control" placeholder="teacher@school.ru" required>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword" class="form-label">Пароль</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Войти</button>
+      </form>
+
+      <!-- Register Form -->
+      <form class="auth-form" id="register-form" onsubmit="handleAuthSubmit(event, 'Регистрация прошла успешно!')">
+        <h3 class="auth-title">Создать аккаунт 🎒</h3>
+        <p class="auth-subtitle">Зарегистрируйтесь, чтобы сохранять неограниченно много наборов</p>
+
+        <div class="form-group">
+          <label for="regName" class="form-label">Ваше имя</label>
+          <input type="text" id="regName" class="form-control" placeholder="Мария Ивановна" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail" class="form-label">Электронная почта</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="teacher@school.ru" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword" class="form-label">Пароль</label>
+          <input type="password" id="regPassword" class="form-control" placeholder="••••••••" minlength="6" required>
+        </div>
+
+        <div class="form-group-checkbox">
+          <input type="checkbox" id="regAgree" required>
+          <label for="regAgree">Я соглашаюсь на обработку персональных данных</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p class="footer-copy">© 2026 ГигаСамобранка · Переосмысление интерфейса для учителей и школьников</p>
+      <p class="footer-authors">Специально для СберОбразование × Школа 21</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
