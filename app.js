@@ -92,6 +92,7 @@ const mascotQuotes = [
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+  loadFromLocalStorage(); // Загружаем сохраненные данные
   initTabs();
   initPlaygroundCard();
   initDifficultyPicker();
@@ -117,6 +118,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// --- LocalStorage Logic ---
+function saveToLocalStorage() {
+  localStorage.setItem('giga_samobranka_decks', JSON.stringify(appState.decks));
+}
+
+function loadFromLocalStorage() {
+  const savedDecks = localStorage.getItem('giga_samobranka_decks');
+  if (savedDecks) {
+    appState.decks = JSON.parse(savedDecks);
+  }
+}
 
 // --- Mascot Quote Bubble ---
 function initMascotClicks() {
@@ -474,6 +487,7 @@ function finalizeGeneration(cards, params) {
   };
   
   appState.decks.unshift(newDeck);
+  saveToLocalStorage(); // Сохраняем после добавления новой колоды
   
   // Reset Form
   document.getElementById('generatorForm').reset();
