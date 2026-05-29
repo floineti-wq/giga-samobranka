@@ -1496,6 +1496,7 @@ select.form-control {
   justify-content: center;
   align-items: center;
   text-align: center;
+  grid-column: span 2; /* Растягиваем на две колонки, чтобы был прямоугольник */
 }
 
 .inspiration-visual {
