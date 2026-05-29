@@ -1530,6 +1530,53 @@ select.form-control {
 }
 
 @media (max-width: 768px) {
+  .app-header {
+    padding: 12px 0;
+  }
+
+  .header-container {
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 16px;
+  }
+  
+  .nav-tabs {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 8px; /* Добавляем отступ между кнопками */
+    padding: 4px;
+    background-color: var(--accent-50);
+    border-radius: 100px;
+    overflow-x: auto; /* На случай очень узких экранов */
+    scrollbar-width: none;
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .nav-tab {
+    flex: 1;
+    min-width: fit-content;
+    padding: 10px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .nav-tab .tab-text {
+    display: block; /* Убеждаемся, что текст виден */
+  }
+
+  .hero-title {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
   .study-card-stage {
     flex-direction: column;
     gap: 24px;
@@ -1560,14 +1607,8 @@ select.form-control {
     border-top: none;
   }
 
-  .header-container {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
   .nav-tabs {
-    width: 100%;
-    justify-content: center;
+    /* Эти стили уже определены выше в @media */
   }
   
   .bento-grid {
