@@ -31,17 +31,17 @@ exports.handler = async (event, context) => {
         2. СОДЕРЖАНИЕ: Пиши конкретные шаги, детали, секреты реализации. Текст должен быть плотным и полезным.
         3. СТИЛЬ: Используй HTML-теги <strong> для выделения ключевых этапов.
         4. КОНТЕКСТ: Идея должна соответствовать роли "${subject}" и ситуации "${grade}".
-        5. ФОРМАТ JSON: Твой ответ должен быть СТРОГО валидным JSON-массивом объектов. 
-           - КРИТИЧНО: Используй только двойные кавычки для строк. 
-           - КРИТИЧНО: Если внутри текста нужны кавычки, используй только ёлочки « » или экранируй их.
-        6. ФОРМАТ ОТВЕТА: [{"q": "название", "a": "подробный план"}]`;
+        5. ФОРМАТ JSON: Твой ответ должен быть СТРОГО валидным JSON-объектом с ключом "cards", содержащим массив из ${count} объектов.
+           - КРИТИЧНО: Используй только двойные кавычки для ключей и строк.
+           - КРИТИЧНО: Если внутри текста нужны кавычки, используй только ёлочки « » или экранируй их \".
+        6. СТРУКТУРА: {"cards": [{"q": "название идеи", "a": "подробный план реализации"}]}`;
 
-        let userPrompt = `Тема: "${topic}". Сгенерируй ${count} уникальных идей.`;
+        let userPrompt = `Тема: "${topic}". Сгенерируй ровно ${count} уникальных идей для роли "${subject}".`;
         if (textData && textData.trim() !== "") {
             userPrompt += `\nИспользуй этот дополнительный контекст: "${textData}"`;
         }
 
-        console.log('Calling Groq API...');
+        console.log('Calling Groq API with count:', count);
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -61,26 +61,45 @@ exports.handler = async (event, context) => {
 
         const data = await response.json();
         let rawContent = data.choices[0].message.content;
+        console.log('Raw content from AI:', rawContent);
         
         // Очистка от возможных markdown-оберток
         rawContent = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
 
         // Попытка распарсить JSON
-        let cards;
+        let cards = [];
         try {
             const parsed = JSON.parse(rawContent);
-            // Если ИИ вернул объект с ключом (например, {"cards": [...]}), берем массив
-            cards = Array.isArray(parsed) ? parsed : (parsed.cards || parsed.ideas || Object.values(parsed)[0]);
+            if (parsed.cards && Array.isArray(parsed.cards)) {
+                cards = parsed.cards;
+            } else if (Array.isArray(parsed)) {
+                cards = parsed;
+            } else {
+                // Если пришел объект, но не массив, попробуем найти в нем любой массив
+                for (let key in parsed) {
+                    if (Array.isArray(parsed[key])) {
+                        cards = parsed[key];
+                        break;
+                    }
+                }
+            }
         } catch (e) {
-            console.error('Initial parse failed, attempting cleanup');
-            // Если совсем плохо, пробуем найти массив через регулярку
+            console.error('JSON Parse failed. Attempting manual extraction.');
             const match = rawContent.match(/\[\s*\{[\s\S]*\}\s*\]/);
             if (match) {
                 cards = JSON.parse(match[0]);
-            } else {
-                throw new Error('Could not find valid JSON array in AI response');
             }
         }
+
+        if (!cards || cards.length === 0) {
+            throw new Error('Не удалось получить список карточек от ИИ. Попробуйте еще раз.');
+        }
+
+        // Проверка структуры каждой карточки
+        cards = cards.map(c => ({
+            q: c.q || c.question || c.title || "Идея без названия",
+            a: c.a || c.answer || c.description || c.plan || "План не сгенерирован"
+        }));
         
         return {
             statusCode: 200,
