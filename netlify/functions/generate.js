@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-
 exports.handler = async (event, context) => {
     // Включаем CORS
     const headers = {
@@ -13,14 +11,16 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        console.log('Function started. Body:', event.body);
         const { subject, grade, topic, count, textData, difficulty } = JSON.parse(event.body);
         const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
         if (!GROQ_API_KEY) {
+            console.error('GROQ_API_KEY is missing in process.env');
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'API Key not configured on Netlify' })
+                body: JSON.stringify({ error: 'API Key not configured on Netlify. Please add GROQ_API_KEY in Site Settings -> Environment variables.' })
             };
         }
 
@@ -37,6 +37,7 @@ exports.handler = async (event, context) => {
 
         const userPrompt = `Сгенерируй ${count} уникальных идей для роли "${subject}". Тема: "${topic}".`;
 
+        console.log('Calling Groq API...');
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -54,10 +55,21 @@ exports.handler = async (event, context) => {
         });
 
         const data = await response.json();
+        console.log('Groq response received:', JSON.stringify(data).substring(0, 200));
+
+        if (data.error) {
+            throw new Error(`Groq API Error: ${data.error.message || JSON.stringify(data.error)}`);
+        }
+
         const rawContent = data.choices[0].message.content;
         
         const startBracket = rawContent.indexOf('[');
         const endBracket = rawContent.lastIndexOf(']');
+        
+        if (startBracket === -1 || endBracket === -1) {
+            throw new Error('Failed to parse JSON from AI response');
+        }
+
         const jsonStr = rawContent.substring(startBracket, endBracket + 1);
         
         return {
@@ -67,6 +79,7 @@ exports.handler = async (event, context) => {
         };
 
     } catch (error) {
+        console.error('Function error:', error);
         return {
             statusCode: 500,
             headers,
