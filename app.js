@@ -348,10 +348,9 @@ function loadDemo(type) {
 async function callScarlexApi(input) {
   console.log('DEBUG: Sending request to API:', input);
   try {
-    // В Vercel API будет доступно по относительному пути /api/generate
-    // Если работаем локально как файл, используем полный путь к серверу
+    // В Netlify функции доступны по пути /.netlify/functions/имя_файла
     const isLocalFile = window.location.protocol === 'file:';
-    const proxyUrl = isLocalFile ? "http://127.0.0.1:3000/api/generate" : "/api/generate";
+    const proxyUrl = isLocalFile ? "http://127.0.0.1:3000/api/generate" : "/.netlify/functions/generate";
     
     const response = await fetch(proxyUrl, {
       method: "POST",
