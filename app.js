@@ -101,6 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initMascotClicks();
   renderDecksGrid();
   
+  // Добавляем обработчик формы
+  const genForm = document.getElementById('generatorForm');
+  if (genForm) {
+    genForm.addEventListener('submit', generateCards);
+  }
+  
   // Render LaTeX on page load
   if (window.renderMathInElement) {
     renderMathInElement(document.body, {
@@ -338,6 +344,40 @@ function loadDemo(type) {
   element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// --- API Integration (Vercel / Local) ---
+async function callScarlexApi(input) {
+  console.log('DEBUG: Sending request to API:', input);
+  try {
+    // В Vercel API будет доступно по относительному пути /api/generate
+    // Если работаем локально как файл, используем полный путь к серверу
+    const isLocalFile = window.location.protocol === 'file:';
+    const proxyUrl = isLocalFile ? "http://127.0.0.1:3000/api/generate" : "/api/generate";
+    
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(input)
+    });
+
+    console.log('DEBUG: Response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('DEBUG: Error response data:', errorData);
+      throw new Error(errorData.error || `Server Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('DEBUG: Successful data received:', data);
+    return data;
+  } catch (err) {
+    console.error('DEBUG: Fetch error:', err);
+    throw err;
+  }
+}
+
 // --- Dynamic Deck Generation ---
 function generateCards(event) {
   event.preventDefault();
@@ -370,68 +410,88 @@ function generateCards(event) {
       submitBtn.innerHTML = `<span class="btn-sparkle">🌀</span> <span class="btn-text">${loadingMessages[step]}</span>`;
     }
   }, 800);
+
+  // Try real API through proxy
+  callScarlexApi({ subject, grade, topic, count, textData, difficulty: appState.selectedDifficulty })
+    .then(cards => {
+      finalizeGeneration(cards, { subject, grade, topic, count, originalHtml, loadingInterval });
+    })
+    .catch(err => {
+      console.error(err);
+      showToast("❌ Ошибка: " + err.message + ". Проверьте, запущен ли сервер и настроен ли .env");
+      
+      // Reset Button on total failure
+      clearInterval(loadingInterval);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalHtml;
+    });
+}
+
+function generateMockCards(subject, grade, topic, count) {
+  const cards = [];
+  for (let i = 1; i <= count; i++) {
+    cards.push({
+      q: `Идея №${i} по запросу "${topic}": Креативная концепция №${i}`,
+      a: `<strong>Как реализовать:</strong> Пошаговый план решения для роли "${subject}" в ситуации "${grade}" с глубиной проработки "${appState.selectedDifficulty == 'easy' ? 'Поверхностно' : appState.selectedDifficulty == 'medium' ? 'Сбалансированно' : 'Глубоко'}".<br>Шаг 1: Сделайте набросок или сформулируйте концепт.<br>Шаг 2: Добавьте контекст и детали.<br>Шаг 3: Протестируйте прототип!`
+    });
+  }
+  return cards;
+}
+
+function finalizeGeneration(cards, params) {
+  const { subject, grade, topic, count, originalHtml, loadingInterval } = params;
   
-  // Simulate network / generation speed
-  setTimeout(() => {
-    clearInterval(loadingInterval);
-    
-    // Create new mock deck in state
-    const newDeckId = appState.decks.length;
-    const badgeMap = {
-      'Художник': 'badge-math',
-      'Скучающий человек': 'badge-lang',
-      'Геймдизайнер': 'badge-world',
-      'Архитектор / Строитель': 'badge-lit',
-      'Предприниматель': 'badge-default',
-      'Писатель / Сценарист': 'badge-default'
-    };
-    
-    const emojiMap = {
-      'Художник': '🎨',
-      'Скучающий человек': '🦊',
-      'Геймдизайнер': '🎮',
-      'Архитектор / Строитель': '🏗️',
-      'Предприниматель': '💼',
-      'Писатель / Сценарист': '✍️'
-    };
-    
-    const newDeck = {
-      id: newDeckId,
-      emoji: emojiMap[subject] || '💡',
-      subject: subject,
-      title: topic,
-      meta: `${count} идей · ${grade}`,
-      badgeClass: badgeMap[subject] || 'badge-default',
-      cards: []
-    };
-    
-    // Fill with smart mock flashcards based on subject/count
-    for (let i = 1; i <= count; i++) {
-      newDeck.cards.push({
-        q: `Идея №${i} по запросу "${topic}": Креативная концепция №${i}`,
-        a: `<strong>Как реализовать:</strong> Пошаговый план решения для роли "${subject}" в ситуации "${grade}" с глубиной проработки "${appState.selectedDifficulty == 'easy' ? 'Поверхностно' : appState.selectedDifficulty == 'medium' ? 'Сбалансированно' : 'Глубоко'}".<br>Шаг 1: Сделайте набросок или сформулируйте концепт.<br>Шаг 2: Добавьте контекст и детали.<br>Шаг 3: Протестируйте прототип!`
-      });
-    }
-    
-    appState.decks.unshift(newDeck); // Add to beginning of list
-    
-    // Reset Form
-    document.getElementById('generatorForm').reset();
-    appState.uploadedFiles = [];
-    renderUploadedFiles();
-    
-    // Reset Button
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = originalHtml;
-    
-    // Refresh UI
-    updateLibraryBadge();
-    renderDecksGrid();
-    
-    // Switch to Library and Show toast success
-    switchTab('library-section');
-    showToast(`✨ Умная Самобранка накрыла стол идеями по теме "${topic}"!`);
-  }, 3200);
+  clearInterval(loadingInterval);
+  const submitBtn = document.getElementById('submitBtn');
+  
+  // Create new deck in state
+  const newDeckId = appState.decks.length;
+  const badgeMap = {
+    'Художник': 'badge-math',
+    'Скучающий человек': 'badge-lang',
+    'Геймдизайнер': 'badge-world',
+    'Архитектор / Строитель': 'badge-lit',
+    'Предприниматель': 'badge-default',
+    'Писатель / Сценарист': 'badge-default'
+  };
+  
+  const emojiMap = {
+    'Художник': '🎨',
+    'Скучающий человек': '🦊',
+    'Геймдизайнер': '🎮',
+    'Архитектор / Строитель': '🏗️',
+    'Предприниматель': '💼',
+    'Писатель / Сценарист': '✍️'
+  };
+  
+  const newDeck = {
+    id: newDeckId,
+    emoji: emojiMap[subject] || '💡',
+    subject: subject,
+    title: topic,
+    meta: `${cards.length} идей · ${grade}`,
+    badgeClass: badgeMap[subject] || 'badge-default',
+    cards: cards
+  };
+  
+  appState.decks.unshift(newDeck);
+  
+  // Reset Form
+  document.getElementById('generatorForm').reset();
+  appState.uploadedFiles = [];
+  renderUploadedFiles();
+  
+  // Reset Button
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = originalHtml;
+  
+  // Refresh UI
+  updateLibraryBadge();
+  renderDecksGrid();
+  
+  // Switch to Library and Show toast success
+  switchTab('library-section');
+  showToast(`✨ Умная Самобранка накрыла стол идеями по теме "${topic}"!`);
 }
 
 // --- Library rendering & Badge update ---
