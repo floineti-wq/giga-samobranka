@@ -417,7 +417,7 @@ function generateCards(event) {
     })
     .catch(err => {
       console.error(err);
-      showToast("❌ Ошибка: " + err.message + ". Проверьте, запущен ли сервер и настроен ли .env");
+      showToast("❌ Ошибка: " + err.message + ". Проверьте настройки API и ключи в Netlify.");
       
       // Reset Button on total failure
       clearInterval(loadingInterval);
