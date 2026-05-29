@@ -1488,6 +1488,48 @@ select.form-control {
   color: var(--accent-800);
 }
 
+.bento-inspiration-card {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-color: #fed7aa;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.inspiration-visual {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.insight-badge {
+  background-color: var(--primary-500);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  animation: float 3s ease-in-out infinite;
+}
+
+.idea-spark {
+  font-size: 40px;
+  margin-top: 10px;
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.5));
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Удаляем старый стиль для bento-formulas-card, если он был */
+.bento-formulas-card {
+  display: none;
+}
+
 /* --- Responsive Adjustments --- */
 @media (max-width: 992px) {
   .hero-card {
@@ -1509,7 +1551,7 @@ select.form-control {
     grid-auto-rows: minmax(200px, auto);
   }
   
-  .bento-formulas-card {
+  .bento-inspiration-card {
     grid-column: span 2;
   }
   
@@ -1619,7 +1661,7 @@ select.form-control {
     grid-row: span 1;
   }
   
-  .bento-formulas-card {
+  .bento-inspiration-card {
     grid-column: span 1;
   }
   
